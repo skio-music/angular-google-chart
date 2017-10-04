@@ -1,4 +1,4 @@
-/*! angular-google-chart 2017-05-20 */
+/*! angular-google-chart 2017-10-03 */
 /*
 * @description Google Chart Api Directive Module for AngularJS
 * @version 1.0.0-beta.1
@@ -359,9 +359,8 @@
     angular.module("googlechart")
         .factory("agcJsapiLoader", agcJsapiLoaderFactory);
 
-    agcJsapiLoaderFactory.$inject = ["$log", "$rootScope", "$q", "agcScriptTagHelper", "googleChartApiConfig"];
-    function agcJsapiLoaderFactory($log, $rootScope, $q, agcScriptTagHelper, googleChartApiConfig){
-        $log.debug("[AGC] jsapi loader invoked.");
+    agcJsapiLoaderFactory.$inject = ["$rootScope", "$q", "agcScriptTagHelper", "googleChartApiConfig"];
+    function agcJsapiLoaderFactory($rootScope, $q, agcScriptTagHelper, googleChartApiConfig){
         var apiReady = $q.defer();
         // Massage configuration as needed.
         googleChartApiConfig.optionalSettings = googleChartApiConfig.optionalSettings || {};
@@ -381,14 +380,11 @@
 
         settings = angular.extend({}, googleChartApiConfig.optionalSettings, settings);
 
-        $log.debug("[AGC] Calling tag helper...");
         agcScriptTagHelper("https://www.google.com/jsapi")
             .then(function(){
-                $log.debug("[AGC] Tag helper returned success.");
                 window.google.load('visualization', googleChartApiConfig.version || '1', settings);
             })
             .catch(function(){
-                $log.error("[AGC] Tag helper returned error. Script may have failed to load.");
                 apiReady.reject();
             });
 
@@ -401,31 +397,10 @@
     angular.module("googlechart")
         .provider("agcLibraryLoader", AgcLibraryLoaderProvider);
 
-    AgcLibraryLoaderProvider.$inject = ["$injector"];
-
-    function AgcLibraryLoaderProvider($injector){
-
-        var DEFAULT_LOADER = "Jsapi";
-
-        this.$get = function(loader){
+    function AgcLibraryLoaderProvider(){
+        this.$get = ['agcGstaticLoader', function(loader){
             return loader;
-        };
-
-        this.setLoader = function(loaderName){
-            if ($injector.has(this.getProviderName(loaderName)))
-                this.$get.$inject = [this.getProviderName(loaderName)];
-            else {
-                console.warn("[Angular-GoogleChart] Loader type \"" + loaderName + "\" doesn't exist. Defaulting to JSAPI loader.");
-                this.$get.$inject = [this.getProviderName(DEFAULT_LOADER)];
-            }
-        };
-
-        this.getProviderName = function(loaderName){
-            loaderName = loaderName.charAt(0).toUpperCase() + loaderName.slice(1);
-            return "agc" + loaderName + "Loader";
-        };
-
-        this.setLoader(DEFAULT_LOADER);
+        }];
     }
 })();
 
@@ -1070,5 +1045,3 @@
         return GoogleChartService;
     }
 })();
-
-//# sourceMappingURL=ng-google-chart.js.map
